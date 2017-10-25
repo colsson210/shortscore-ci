@@ -1,6 +1,8 @@
 ext {
-    dockerImageName = "colsson210/$name"
-    dockerTag = version
+    dockerImageName = "shortscoreci"
+    version = "1"
+    dockerTagName = "$dockerImageName:$version"
+    dockerContainerName = "${dockerImageName}Container"
     jenkinsPort = 8080
     jenkinsHost = 'localhost'
     jenkinsURL = project.hasProperty('jenkinsURL') ? jenkinsURL : "http://$jenkinsHost:$jenkinsPort"
@@ -13,9 +15,9 @@ task wrapper(type: Wrapper) {
 
 task dockerRun(type: Exec) {
     group 'Docker'
-    description "Run the jenkins docker container locally, use the 'latest' tag"
+    description "Run the jenkins docker container locally"
     commandLine 'docker'
-    args = ['run', dockerDetached == 'true' ? '-d' : '--rm', '--name', 'jenkinsshortscore', '-p', "$jenkinsPort:$jenkinsPort", '-p', '50000:50000', '-v', '/var/run/docker.sock:/var/run/docker.sock', '-v', '/usr/bin/docker:/usr/bin/docker', '-v', '/var/run:/var/run:rw', '-v', '/var/jenkins_home', "$dockerImageName"]
+    args = ['run', dockerDetached == 'true' ? '--detach' : '--rm', '--name', dockerContainerName, '--publish', "$jenkinsPort:$jenkinsPort", '--publish', '50000:50000', '--volume', '/var/run/docker.sock:/var/run/docker.sock', '--volume', '/usr/bin/docker:/usr/bin/docker', '--volume', '/var/run:/var/run:rw', '--volume', '/var/jenkins_home', dockerTagName]
     doLast {
         try {
             if(dockerDetached == 'true'){
@@ -45,26 +47,26 @@ task dockerStop(type: Exec) {
     group 'Docker'
     description 'Stop the jenkins docker container'
     commandLine 'docker'
-    args = ['rm', '-f', '-v', 'jenkinsshortscore']
+    args = ['rm', '--force', '--volumes', dockerContainerName]
 }
 
 task dockerStatus(type: Exec) {
     group 'Docker'
-    description 'Display the process status of jenkins docker container'
+    description 'Display the process status of the jenkins docker container'
     commandLine 'docker'
-    args = ['ps', '-a', '-f', "name=jenkinsshortscore"]
+    args = ['ps', '-all', '--filter', "name=$dockerContainerName"]
 }
 
 task dockerBuild(type: Exec) {
     group 'Docker'
-    description "Build the docker image, tag as current version and 'as latest'."
+    description "Build the jenkins docker image"
     commandLine 'docker'
-    args = ['build', '-t', "$dockerImageName:$dockerTag", '-t', "$dockerImageName:latest", "."]
+    args = ['build', '--tag', dockerTagName, "."]
 }
 
 task dockerPush(type: Exec) {
     group 'Docker'
-    description 'Push the docker image with the current tag'
+    description 'Push the jenkins docker image'
     commandLine 'docker'
-    args = ['push', "$dockerImageName:$dockerTag"]
+    args = ['push', dockerImageName]
 }

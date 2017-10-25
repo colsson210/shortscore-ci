@@ -29,7 +29,7 @@
       <configVersion>2</configVersion>
       <userRemoteConfigs>
         <hudson.plugins.git.UserRemoteConfig>
-          <url>https://github.com/colsson210/shortscore.git</url>
+          <url>https://github.com/PeterBjuhr/shortscore.git/</url>
         </hudson.plugins.git.UserRemoteConfig>
       </userRemoteConfigs>
       <branches>
